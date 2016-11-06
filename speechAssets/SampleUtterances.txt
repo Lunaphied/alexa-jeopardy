@@ -1,10 +1,7 @@
-AlexaJeopardyIntent say hello
-AlexaJeopardyIntent say hello world
-AlexaJeopardyIntent hello
-AlexaJeopardyIntent say hi
-AlexaJeopardyIntent say hi world
-AlexaJeopardyIntent hi
-AlexaJeopardyIntent how are you
+StartJeopardyIntent start game
+StartJeopardyIntent begin
+StartJeopardyIntent start a game
+StartJeopardyIntent start
 ListCategoryIntent list categories
 ListCategoryIntent what categories are there
 ListCategoryIntent what are my categories

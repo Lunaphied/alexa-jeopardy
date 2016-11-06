@@ -21,7 +21,7 @@
 /**
  * App ID for the skill
  */
-var APP_ID = undefined; //replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
+var APP_ID = "amzn1.ask.skill.660b9a28-6cd8-46a0-aa51-32ea10ff586e"; //replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
 
 /**
  * The AlexaSkill prototype and helper functions
@@ -34,6 +34,23 @@ var AlexaSkill = require('./AlexaSkill');
 function retrieveScore(teamName) {
     // XXX: Return actual score
     return 9001;
+}
+
+function getRemainingCategories() {
+    // XXX: Return actual remaining categories
+    return [
+    {
+        category: 'Food',
+        value: 100
+    }
+    ];
+}
+
+
+function startGame(session, response) {
+    session.attributes = {};
+    session.attributes.gameRunning = true;
+    response.tellKeepSession("New game of jeopardy started.");
 }
 
 /**
@@ -71,8 +88,13 @@ AlexaJeopardy.prototype.eventHandlers.onSessionEnded = function (sessionEndedReq
 
 AlexaJeopardy.prototype.intentHandlers = {
     // register custom intent handlers
-    "AlexaJeopardyIntent": function (intent, session, response) {
-        response.tellWithCard("Hello World!", "Hello World", "Hello World!");
+    "StartJeopardyIntent": function (intent, session, response) {
+        if (session.attributes && session.attributes.gameRunning) {
+            session.attributes.cancelPending = true;
+            response.ask("Sorry, a game is already running.]", "Do you want me to cancel?");
+        } else {
+            startGame(session, response);
+        }
     },
     "ListCategoryIntent": function (intent, session, response) {
         response.tellWithCard("The available categories are: Category list here.", "Category options", "List of categories");
@@ -87,6 +109,27 @@ AlexaJeopardy.prototype.intentHandlers = {
     },
     "AMAZON.HelpIntent": function (intent, session, response) {
         response.ask("You can say hello to me!", "You can say hello to me!");
+    },
+    "AMAZON.YesIntent": function (intent, session, response) {
+        if (session.attributes) {
+          if (session.attributes.cancelPending) {
+                delete session.attributes.cancelPending;
+                session.attributes = {};
+                response.ask("Your game has been cancelled.", "Do you want me to start a new game?");
+                session.attributes.startPending = true;
+            } else if (session.attributes.startPending) {
+                delete session.attributes.startPending;
+                startGame(session, response);
+            }
+        } 
+    },
+    "AMAZON.NoIntent": function (intent, session, response) {
+        if (session.attributes) {
+            if (session.attributes.cancelPending) {
+                delete session.attributes.cancelPending;
+                response.tellKeepSession("Cancel aborted");
+            }
+        }
     }
 };
 
