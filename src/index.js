@@ -38,12 +38,10 @@ function retrieveScore(teamName) {
 
 function getRemainingCategories() {
     // XXX: Return actual remaining categories
-    return [
-    {
-        category: 'Food',
-        value: 100
-    }
-    ];
+    return {
+        food: [ 100, 200, 300],
+        pasta: [ 100, 200, 400]
+    };
 }
 
 
