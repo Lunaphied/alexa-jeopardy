@@ -1,0 +1,12 @@
+AlexaJeopardyIntent say hello
+AlexaJeopardyIntent say hello world
+AlexaJeopardyIntent hello
+AlexaJeopardyIntent say hi
+AlexaJeopardyIntent say hi world
+AlexaJeopardyIntent hi
+AlexaJeopardyIntent how are you
+ListCategoryIntent list categories
+ListCategoryIntent what categories are there
+ListCategoryIntent what are my categories
+SelectCategoryIntent select {category} for one hundred
+SelectCategoryIntent {category} for one hundred
