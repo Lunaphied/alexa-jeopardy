@@ -107,6 +107,10 @@ AlexaJeopardy.prototype.intentHandlers = {
             response.tell("Sorry that category failed");
         }
     },
+    "AlexaJeopardyScore": function (intent, session, response) {
+        var teamName = intent.slots.teamName;
+        response.tellKeepSession("The Score for team"+ teamName + "is currently" + retrieveScore(teamName.value));
+    },
     "AMAZON.HelpIntent": function (intent, session, response) {
         response.ask("You can say hello to me!", "You can say hello to me!");
     },
