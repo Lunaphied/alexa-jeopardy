@@ -5,5 +5,9 @@ StartJeopardyIntent start
 ListCategoryIntent list categories
 ListCategoryIntent what categories are there
 ListCategoryIntent what are my categories
-SelectCategoryIntent select {category} for one hundred
-SelectCategoryIntent {category} for one hundred
+SelectCategoryIntent select {category} for {score}
+SelectCategoryIntent {category} for {score}
+AlexaJeopardyScore tell me score for team {teamName}
+AlexaJeopardyScore what's the score for team {teamName}
+AlexaJeopardyScore current standing for team {teamName}
+AlexaJeopardyScore score for {teamName}

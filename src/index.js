@@ -91,7 +91,7 @@ AlexaJeopardy.prototype.intentHandlers = {
     "StartJeopardyIntent": function (intent, session, response) {
         if (session.attributes && session.attributes.gameRunning) {
             session.attributes.cancelPending = true;
-            response.ask("Sorry, a game is already running.]", "Do you want me to cancel?");
+            response.ask("Sorry, a game is already running. Want to cancel?", "Do you want me to cancel the game of Jeopardy running?");
         } else {
             startGame(session, response);
         }
@@ -109,7 +109,11 @@ AlexaJeopardy.prototype.intentHandlers = {
     },
     "AlexaJeopardyScore": function (intent, session, response) {
         var teamName = intent.slots.teamName;
-        response.tellKeepSession("The Score for team"+ teamName + "is currently" + retrieveScore(teamName.value));
+        if (teamName && teamName.value) {
+            response.tellKeepSession("The Score for team" + teamName.value + "is currently" + retrieveScore(teamName.value));
+        } else {
+            response.tellKeepSession("Sorry I didn't catch that team name.");
+        }
     },
     "AMAZON.HelpIntent": function (intent, session, response) {
         response.ask("You can say hello to me!", "You can say hello to me!");
@@ -119,7 +123,7 @@ AlexaJeopardy.prototype.intentHandlers = {
           if (session.attributes.cancelPending) {
                 delete session.attributes.cancelPending;
                 session.attributes = {};
-                response.ask("Your game has been cancelled.", "Do you want me to start a new game?");
+                response.ask("Your game has been cancelled. Start again?", "Do you want me to start a new game of Jeopardy?");
                 session.attributes.startPending = true;
             } else if (session.attributes.startPending) {
                 delete session.attributes.startPending;

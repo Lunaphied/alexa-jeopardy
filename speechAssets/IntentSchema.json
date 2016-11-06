@@ -12,6 +12,19 @@
         {
             "name": "category",
             "type": "LIST_OF_CATEGORIES"
+        },
+        {
+            "name": "score",
+            "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
+      "intent": "AlexaJeopardyScore",
+      "slots": [
+        {
+            "name": "teamName",
+            "type": "LIST_OF_TEAMS"
         }
       ]
     },
