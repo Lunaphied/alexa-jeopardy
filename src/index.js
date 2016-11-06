@@ -29,7 +29,15 @@ var APP_ID = undefined; //replace with "amzn1.echo-sdk-ams.app.[your-unique-valu
 var AlexaSkill = require('./AlexaSkill');
 
 /**
- * HelloWorld is a child of AlexaSkill.
+ * Function to use AJAX to connect to the backend server and retrieve a score
+ */
+function retrieveScore(teamName) {
+    // XXX: Return actual score
+    return 9001;
+}
+
+/**
+ * AlexaJeopardy is a child of AlexaSkill.
  * To read more about inheritance in JavaScript, see the link below.
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Introduction_to_Object-Oriented_JavaScript#Inheritance
