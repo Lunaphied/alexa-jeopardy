@@ -28,10 +28,12 @@ var APP_ID = "amzn1.ask.skill.660b9a28-6cd8-46a0-aa51-32ea10ff586e"; //replace w
  */
 var AlexaSkill = require('./AlexaSkill');
 
+/*
 var AWS = require('aws-sdk');
 var dynamo = new AWS.DynamoDB.DocumentClient();
 
 var TABLE_NAME = "JeopardySession";
+*/
 
 /**
  * Function to use AJAX to connect to the backend server and retrieve a score
@@ -54,6 +56,8 @@ function getRemainingCategories() {
 }
 
 function isGameRunning(callback) {
+    callback(true);
+    /* 
     var params = {
         TableName: TABLE_NAME,
         KeyConditionExpression: "Id = :id, #s = :state",
@@ -78,11 +82,13 @@ function isGameRunning(callback) {
             }
         }
     });
+    */
 }
 
 
 function startGame(session, response) {
     response.tell("New game of jeopardy started.");
+    /*
     var params = {
         TableName: TABLE_NAME,
         Key: {
@@ -104,6 +110,7 @@ function startGame(session, response) {
             response.tell("New game started");
         }
     });
+    */
 }
 
 /**
@@ -255,7 +262,7 @@ AlexaJeopardy.prototype.intentHandlers = {
             remainingCategories = session.attributes.remainingCategories;
         }
         for (var i in remainingCategories) {
-            if (i == undefined || remainingCategories[i] == undefined) {
+            if (i == undefined || remainingCategories[i] == undefined || i == null || remainingCategories[i] == null) {
                 continue;
             }
             categoryOutput += i;
@@ -295,6 +302,17 @@ AlexaJeopardy.prototype.intentHandlers = {
                     for (var i = 0; i < record.length; ++i) {
                         var obj = record[i];
                         if (obj.category.toLowerCase() == categorySlot.value.toLowerCase() && obj.value == scoreSlot.value) {
+                            var removedIndex = selectedCategory.indexOf(obj.value);
+                            var newArray = new Array();
+                            for (var j = 0; j < selectedCategory.length; ++j) {
+                                if (j == removedIndex) {
+                                    continue;
+                                }
+                                newArray.push(selectedCategory[j]);
+                            }
+                            remainingCategories[obj.category.toLowerCase()] = newArray;
+                            session.attributes.answers = obj.answers;
+                            session.attributes.answerScore = obj.value;
                             response.ask("Selected category: " + categorySlot.value + " for " + scoreSlot.value +". Your question is: " + obj.question, obj.question);
                             break;
                         }
@@ -353,7 +371,22 @@ AlexaJeopardy.prototype.intentHandlers = {
     },
     "AnswerOnlyIntent": function (intent, session, response) {
         if (intent.slots.answer && intent.slots.answer.value) {
-            response.tellKeepSession("You answered: " + intent.slots.answer.value);
+            var answerSlot = intent.slots.answer;
+            for (var i = 0; i < session.attributes.answers; ++i) {
+                var answer = session.attributes.answers[i].toLowerCase();
+                console.log(answer);
+                console.log(answerSlot.value.toLowerCase());
+                if (answerSlot.value.toLowerCase() == answer) {
+                    if (session.attributes.blue) {
+                        session.attributes.blue += session.attributes.answerScore;
+                    } else {
+                        session.attributes.blue = session.attributes.answerScore;
+                    }
+                    response.tellKeepSession("You correctly answered: " + answer);
+                    break;
+                }
+            }
+            response.tellKeepSession("Sorry you didn't answer correctly!");
         } else {
             response.ask("Sorry I couldn't quite catch that. Please repeat your answer", "Please repeat your answer");
         }
