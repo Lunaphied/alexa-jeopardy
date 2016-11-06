@@ -116,6 +116,97 @@ var AlexaJeopardy = function () {
     AlexaSkill.call(this, APP_ID);
 };
 
+var record = [
+    {
+    question: "This place is the university in Dekalb?",
+    answers: [
+        "What is a N I U",
+		"What is Northern Illinois University"
+	],
+	category: "northern",
+	value: 200
+    },
+	{
+	question: "This is the mascot of N I U?",
+    answers: [
+        "What is Huskies",
+		"What is a Husky"
+	],
+	category: "northern",
+	value: 400
+	},
+	{
+	question: "This is the place where the Huskie Hack is?",
+    answers: [
+        "What is Holmes Student Center",
+		"What is a H S C"
+	],
+	category: "northern",
+	value: 600
+	},
+	{
+    question: "This is the abbriviation of the Computer Science building?",
+    answers: [
+        "What is P M",
+		"What is the P M"
+	],
+	category: "northern",
+	value: 800
+	},
+	{
+	question: "This number C S C I course is titled Intermediate Programming?",
+    answers: [
+        "What is 241",
+		"What is 2 4 1"
+	],
+	category: "northern",
+	value: 1000
+	},
+    {
+	question: "This is the smallest unit",
+    answers: [
+        "What is atom",
+		"What is an atom"
+	],
+	category: "northern",
+	value: 200
+	},
+	{
+	question: "This is made up of 2 or more atoms",
+    answers: [
+        "What is molecule",
+		"What is a molecule"
+	],
+	category: "northern",
+	value: 400
+	},
+	{
+	question: "Adrenaline is another name for this hormone secreted in response to stress or fear",
+    answers: [
+        "What is epinephrine"
+	],
+	category: "northern",
+	value: 600
+	},
+	{
+	question: "The earliest period of the Paleozoic Era, it extends from about 542 to 488 million years ago",
+    answers: [
+        "What is the Cambrian"
+	],
+	category: "northern",
+	value: 800
+	},
+	{
+	question: "Organic chemistry focuses specifically on this element's compounds & their reactions",
+    answers: [
+        "What is carbon"
+	],
+	category: "northern",
+	value: 1000
+	}
+	
+	];
+
 // Extend AlexaSkill
 AlexaJeopardy.prototype = Object.create(AlexaSkill.prototype);
 AlexaJeopardy.prototype.constructor = AlexaJeopardy;
@@ -192,10 +283,22 @@ AlexaJeopardy.prototype.intentHandlers = {
                 remainingCategories = session.attributes.remainingCategories;
             }
             if (remainingCategories[categorySlot.value.toLowerCase()]) {
-                console.log(scoreSlot.value  + ':' + remainingCategories[categorySlot.value.toLowerCase()])
-                if (remainingCategories[categorySlot.value.toLowerCase()].indexOf(scoreSlot.value) > -1) {
-                    
-                    response.tellKeepSession("Selected category: " + categorySlot.value + " for " + scoreSlot.value);
+                var selectedCategory = remainingCategories[categorySlot.value.toLowerCase()];
+                var found = false;
+                for (var i = 0; i < selectedCategory.length; ++i) {
+                    if (selectedCategory[i] == scoreSlot.value) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    for (var i = 0; i < record.length; ++i) {
+                        var obj = record[i];
+                        if (obj.category.toLowerCase() == categorySlot.value.toLowerCase() && obj.value == scoreSlot.value) {
+                            response.ask("Selected category: " + categorySlot.value + " for " + scoreSlot.value +". Your question is: " + obj.question, obj.question);
+                            break;
+                        }
+                    }
                 } else {
                     response.tellKeepSession("Sorry " + scoreSlot.value + " is not a valid option for that category.");
                 }
@@ -247,7 +350,14 @@ AlexaJeopardy.prototype.intentHandlers = {
             session.attributes = {};
         }
         response.tell("Game cancelled!");
-    } 
+    },
+    "AnswerOnlyIntent": function (intent, session, response) {
+        if (intent.slots.answer && intent.slots.answer.value) {
+            response.tellKeepSession("You answered: " + intent.slots.answer.value);
+        } else {
+            response.ask("Sorry I couldn't quite catch that. Please repeat your answer", "Please repeat your answer");
+        }
+    }
 };
 
 // Create the handler that responds to the Alexa Request.

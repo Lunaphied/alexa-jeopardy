@@ -29,6 +29,15 @@
       ]
     },
     {
+      "intent": "AnswerOnlyIntent",
+      "slots": [
+        {
+            "name": "answer",
+            "type": "LIST_OF_ANSWERS"
+        }
+      ]
+    },
+    {
       "intent": "AMAZON.HelpIntent"
     },
     {
