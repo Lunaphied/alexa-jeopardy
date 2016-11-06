@@ -5,9 +5,13 @@ StartJeopardyIntent start
 ListCategoryIntent list categories
 ListCategoryIntent what categories are there
 ListCategoryIntent what are my categories
+ListCategoryIntent what are the remaining categories
+ListCategoryIntent what are the remaining answers
+ListCategoryIntent what do we have left
 SelectCategoryIntent select {category} for {score}
 SelectCategoryIntent {category} for {score}
 AlexaJeopardyScore tell me score for team {teamName}
 AlexaJeopardyScore what's the score for team {teamName}
 AlexaJeopardyScore current standing for team {teamName}
 AlexaJeopardyScore score for {teamName}
+SelectCategoryIntent list categories

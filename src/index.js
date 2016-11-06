@@ -28,27 +28,82 @@ var APP_ID = "amzn1.ask.skill.660b9a28-6cd8-46a0-aa51-32ea10ff586e"; //replace w
  */
 var AlexaSkill = require('./AlexaSkill');
 
+var AWS = require('aws-sdk');
+var dynamo = new AWS.DynamoDB.DocumentClient();
+
+var TABLE_NAME = "JeopardySession";
+
 /**
  * Function to use AJAX to connect to the backend server and retrieve a score
  */
-function retrieveScore(teamName) {
-    // XXX: Return actual score
-    return 9001;
+function retrieveScore(session, teamName) {
+    if (session.attributes && session.attributes[teamName]) {
+        return session.attributes[teamName];
+    } else {
+        session.attributes[teamName] = 0;
+        return 0;
+    }
 }
 
 function getRemainingCategories() {
     // XXX: Return actual remaining categories
     return {
-        food: [ 100, 200, 300],
-        pasta: [ 100, 200, 400]
+        northern: [ 200, 400, 600, 800, 1000],
+        science: [200, 400, 600, 800, 1000],
     };
+}
+
+function isGameRunning(callback) {
+    var params = {
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "Id = :id, #s = :state",
+        ExpressionAttributeValues: {
+            ":id": 1,
+            ":state": "running"
+        },
+        ExpressionAttributeNames: {
+            "#s": "Session"
+        }
+    };
+    dynamo.query(params, function (err, data) {
+        if (err) {
+            console.log(JSON.stringify(err, null, 2));
+            callback(false);
+        } else {
+            console.log(JSON.stringify(data, null, 2));
+            if (data.Count >= 1) {
+                callback(true);
+            } else {
+                callback(false);
+            }
+        }
+    });
 }
 
 
 function startGame(session, response) {
-    session.attributes = {};
-    session.attributes.gameRunning = true;
-    response.tellKeepSession("New game of jeopardy started.");
+    response.tell("New game of jeopardy started.");
+    var params = {
+        TableName: TABLE_NAME,
+        Key: {
+            "Id": 1
+        },
+        UpdateExpression: "set #s = :state",
+        ExpressionAttributeValues: {
+            ":state": "running"
+        },
+        ExpressionAttributeNames: {
+            "#s": "Session"
+        },
+        ReturnValues: "UPDATED_NEW"
+    }
+    dynamo.update(params, function(err, data) {
+        if (err) {
+            console.log("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            response.tell("New game started");
+        }
+    });
 }
 
 /**
@@ -87,34 +142,82 @@ AlexaJeopardy.prototype.eventHandlers.onSessionEnded = function (sessionEndedReq
 AlexaJeopardy.prototype.intentHandlers = {
     // register custom intent handlers
     "StartJeopardyIntent": function (intent, session, response) {
-        if (session.attributes && session.attributes.gameRunning) {
-            session.attributes.cancelPending = true;
-            response.ask("Sorry, a game is already running. Want to cancel?", "Do you want me to cancel the game of Jeopardy running?");
-        } else {
-            startGame(session, response);
-        }
+        isGameRunning(function(isRunning) {
+            if (isRunning) {
+                session.attributes.cancelPending = true;
+                response.ask("Sorry, a game is already running. Want to cancel?", "Do you want me to cancel the game of Jeopardy running?");
+            } else {
+                startGame(session, response);
+            } 
+        });
     },
     "ListCategoryIntent": function (intent, session, response) {
-        response.tellWithCard("The available categories are: Category list here.", "Category options", "List of categories");
+        var remainingCategories = {};
+        var categoryOutput = "";
+        if (session.attributes && session.attributes.remainingCategories && session.attributes.isGameRunning) {
+            remainingCategories = session.attributes.remainingCategories;
+        } else {
+            session.attributes = {
+                isGameRunning: true,
+                remainingCategories: getRemainingCategories()
+            };
+            remainingCategories = session.attributes.remainingCategories;
+        }
+        for (var i in remainingCategories) {
+            if (i == undefined || remainingCategories[i] == undefined) {
+                continue;
+            }
+            categoryOutput += i;
+            categoryOutput += " for ";
+            for (var j = 0; j < remainingCategories[i].length - 1; ++j) {
+                categoryOutput += remainingCategories[i][j] + ", ";
+            }
+            categoryOutput += " and " + remainingCategories[i][remainingCategories[i].length - 1];
+            categoryOutput +=", ";
+        }
+        response.tellKeepSession("The available categories are: " + categoryOutput.replace("undefined", ""));
     },
     "SelectCategoryIntent": function (intent, session, response) {
         var categorySlot = intent.slots.category;
-        if (categorySlot && categorySlot.value) {
-            response.tell("Selected category: " + categorySlot.value);
+        var scoreSlot = intent.slots.score;
+        if (categorySlot && categorySlot.value && scoreSlot && scoreSlot.value) {
+            var remainingCategories = {};
+            if (session.attributes && session.attributes.remainingCategories && session.attributes.isGameRunning) {
+                remainingCategories = session.attributes.remainingCategories;
+            } else {
+                session.attributes = {
+                    isGameRunning: true,
+                    remainingCategories: getRemainingCategories()
+                };
+                remainingCategories = session.attributes.remainingCategories;
+            }
+            if (remainingCategories[categorySlot.value.toLowerCase()]) {
+                console.log(scoreSlot.value  + ':' + remainingCategories[categorySlot.value.toLowerCase()])
+                if (remainingCategories[categorySlot.value.toLowerCase()].indexOf(scoreSlot.value) > -1) {
+                    
+                    response.tellKeepSession("Selected category: " + categorySlot.value + " for " + scoreSlot.value);
+                } else {
+                    response.tellKeepSession("Sorry " + scoreSlot.value + " is not a valid option for that category.");
+                }
+            } else {
+                response.tellKeepSession("Sorry that category is unavailable");
+            }
         } else {
-            response.tell("Sorry that category failed");
+            response.tellKeepSession("Sorry that category failed");
         }
     },
     "AlexaJeopardyScore": function (intent, session, response) {
         var teamName = intent.slots.teamName;
         if (teamName && teamName.value) {
-            response.tellKeepSession("The Score for team" + teamName.value + "is currently" + retrieveScore(teamName.value));
+            response.tellKeepSession("The Score for team " + teamName.value + " is currently " + retrieveScore(session, teamName.value));
         } else {
             response.tellKeepSession("Sorry I didn't catch that team name.");
         }
     },
     "AMAZON.HelpIntent": function (intent, session, response) {
-        response.ask("You can say hello to me!", "You can say hello to me!");
+        isGameRunning(function(data) {
+            response.tellKeepSession("" + data);
+        });
     },
     "AMAZON.YesIntent": function (intent, session, response) {
         if (session.attributes) {
@@ -134,9 +237,17 @@ AlexaJeopardy.prototype.intentHandlers = {
             if (session.attributes.cancelPending) {
                 delete session.attributes.cancelPending;
                 response.tellKeepSession("Cancel aborted");
+            } else if (session.attributes.startPending) {
+                response.tellKeepSession("Ok");
             }
         }
-    }
+    },
+    "AMAZON.CancelIntent": function (intent, session, response) {
+        if (session.attributes) {
+            session.attributes = {};
+        }
+        response.tell("Game cancelled!");
+    } 
 };
 
 // Create the handler that responds to the Alexa Request.
